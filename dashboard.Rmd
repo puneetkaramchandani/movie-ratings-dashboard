@@ -1,0 +1,851 @@
+---
+title: "Movie Ratings Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: scroll
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(DT)
+library(rpivotTable)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(openintro)
+library(highcharter)
+library(ggvis)
+```
+
+```{r}
+data <- read.csv("F:/MBA Module 8th Jan-March 22022/INT577/MovieRatings.csv")
+```
+
+```{r}
+mycolors <- c("blue", "#FFC125", "darkgreen", "darkorange")
+```
+
+Dashboard
+=====================================
+
+Row
+-------------------------------------
+
+### Total Number of Movies
+
+```{r}
+valueBox(length(data$Film),color='red',icon = 'fa-video')
+```
+
+### Total Budget
+
+```{r}
+valueBox(sum(data$Budget..million...),
+         icon = 'fa-dollar',color='green')
+```
+
+### Average Movie Budget
+
+```{r}
+valueBox(round(mean(data$Budget..million...),digits = 3),
+         icon = 'fa-dollar',color='purple')
+```
+
+Row
+-------------------------------------
+
+### Average Rotten Tomato Ratings
+
+```{r}
+gauge(round(mean(data$Rotten.Tomatoes.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+### Average Audience Ratings
+
+```{r}
+gauge(round(mean(data$Audience.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+Row
+-------------------------------------
+
+### Movies By Genre
+
+```{r}
+p1 <- data %>%
+         group_by(Genre) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~Genre,
+                 y = ~count,
+                 color = ~Genre,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Movies By Genre"),
+yaxis = list(title = 'Count'))
+p1
+```
+
+### Budget By Genre
+```{r}
+p2 <- data %>%
+         group_by(Genre) %>%
+         summarise(Freq = sum(Budget..million...)) %>%
+         plot_ly(x = ~Genre,
+                 y = ~Freq,
+                 color = ~Genre,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Budget By Genre"),
+yaxis = list(title = 'Budget($)'))
+p2
+```
+
+Row
+-------------------------------------
+
+### Total Movies Released Per Year
+```{r}
+p3 <- data %>%
+         group_by(Year.of.release) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~count,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Movies By Year"),
+yaxis = list(title = 'Number of Movies'))
+p3
+```
+
+### Budget By Year
+```{r}
+p4 <- data %>%
+         group_by(Year.of.release) %>%
+         summarise(Freq = sum(Budget..million...)) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~Freq,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Budget By Year"),
+yaxis = list(title = 'Budget($)'))
+p4
+```
+
+Movies
+=====================================
+
+Row
+-------------------------------------
+```{r}
+datatable(data,
+          caption = "Movies Rating Data",
+          rownames = T,
+          filter = "top",
+          options = list(pageLength = 10))
+```
+
+Action Films
+=====================================
+
+Row
+-------------------------------------
+### Total Number of Action Movies
+
+```{r}
+valueBox(sum(data$Genre == 'Action'),color='red',icon = 'fa-video')
+```
+
+### Total Budget of Action Movies
+
+```{r}
+valueBox(sum(data[which(data$Genre == 'Action'), "Budget..million..."]),
+         icon = "fa-dollar",color = "green")
+```
+
+### Average Budget of Action Movies
+
+```{r}
+valueBox(round(mean(data[which(data$Genre == 'Action'), "Budget..million..."]),digits = 3),
+         icon = "fa-dollar",color = "green")
+```
+
+Row
+-------------------------------------
+
+### Average Rotten Tomato Ratings
+
+```{r}
+temp <- filter(data, Genre == "Action")
+gauge(round(mean(temp$Rotten.Tomatoes.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+### Average Audience Ratings
+
+```{r}
+temp <- filter(data, Genre == "Action")
+gauge(round(mean(temp$Audience.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+Row
+-------------------------------------
+
+### Number of Action Movies By Year
+```{r}
+temp <- filter(data, Genre == "Action")
+p5 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~count,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'No. of Action Movies'))
+p5
+```
+
+### Budget of Action Movies By Year
+```{r}
+temp <- filter(data, Genre == "Action")
+p6 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(Freq = sum(Budget..million...)) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~Freq,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'Budget($)'))
+p6
+```
+
+Adventure Films
+=====================================
+
+Row
+-------------------------------------
+### Total Number of Adventure Movies
+
+```{r}
+valueBox(sum(data$Genre == 'Adventure'),color='red',icon = 'fa-video')
+```
+
+### Total Budget of Adventure Movies
+
+```{r}
+valueBox(sum(data[which(data$Genre == 'Adventure'), "Budget..million..."]),
+         icon = "fa-dollar",color = "green")
+```
+
+### Average Budget of Adventure Movies
+
+```{r}
+valueBox(round(mean(data[which(data$Genre == 'Adventure'), "Budget..million..."]),digits = 3),
+         icon = "fa-dollar",color = "green")
+```
+
+Row
+-------------------------------------
+
+### Average Rotten Tomato Ratings
+
+```{r}
+temp <- filter(data, Genre == "Adventure")
+gauge(round(mean(temp$Rotten.Tomatoes.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+### Average Audience Ratings
+
+```{r}
+temp <- filter(data, Genre == "Adventure")
+gauge(round(mean(temp$Audience.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+Row
+-------------------------------------
+
+### Number of Adventrue Movies By Year
+```{r}
+temp <- filter(data, Genre == "Action")
+p7 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~count,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'No. of Adventure Movies'))
+p7
+```
+
+### Budget of Adventure Movies By Year
+```{r}
+temp <- filter(data, Genre == "Adventure")
+p8 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(Freq = sum(Budget..million...)) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~Freq,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'Budget($)'))
+p8
+```
+
+Comedy Films
+=====================================
+
+Row
+-------------------------------------
+### Total Number of Comedy Movies
+
+```{r}
+valueBox(sum(data$Genre == 'Comedy'),color='red',icon = 'fa-video')
+```
+
+### Total Budget of Comedy Movies
+
+```{r}
+valueBox(sum(data[which(data$Genre == 'Comedy'), "Budget..million..."]),
+         icon = "fa-dollar",color = "green")
+```
+
+### Average Budget of Comedy Movies
+
+```{r}
+valueBox(round(mean(data[which(data$Genre == 'Comedy'), "Budget..million..."]),digits = 3),
+         icon = "fa-dollar",color = "green")
+```
+
+Row
+-------------------------------------
+
+### Average Rotten Tomato Ratings
+
+```{r}
+temp <- filter(data, Genre == "Comedy")
+gauge(round(mean(temp$Rotten.Tomatoes.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+### Average Audience Ratings
+
+```{r}
+temp <- filter(data, Genre == "Comedy")
+gauge(round(mean(temp$Audience.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+Row
+-------------------------------------
+
+### Number of Comedy Movies By Year
+```{r}
+temp <- filter(data, Genre == "Comedy")
+p9 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~count,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'No. of Comedy Movies'))
+p9
+```
+
+### Budget of Comedy Movies By Year
+```{r}
+temp <- filter(data, Genre == "Comedy")
+p10 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(Freq = sum(Budget..million...)) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~Freq,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'Budget($)'))
+p10
+```
+
+Drama Films
+=====================================
+
+Row
+-------------------------------------
+### Total Number of Drama Movies
+
+```{r}
+valueBox(sum(data$Genre == 'Drama'),color='red',icon = 'fa-video')
+```
+
+### Total Budget of Drama Movies
+
+```{r}
+valueBox(sum(data[which(data$Genre == 'Drama'), "Budget..million..."]),
+         icon = "fa-dollar",color = "green")
+```
+
+### Average Budget of Drama Movies
+
+```{r}
+valueBox(round(mean(data[which(data$Genre == 'Drama'), "Budget..million..."]),digits = 3),
+         icon = "fa-dollar",color = "green")
+```
+
+Row
+-------------------------------------
+
+### Average Rotten Tomato Ratings
+
+```{r}
+temp <- filter(data, Genre == "Drama")
+gauge(round(mean(temp$Rotten.Tomatoes.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+### Average Audience Ratings
+
+```{r}
+temp <- filter(data, Genre == "Drama")
+gauge(round(mean(temp$Audience.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+Row
+-------------------------------------
+
+### Number of Drama Movies By Year
+```{r}
+temp <- filter(data, Genre == "Drama")
+p11 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~count,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'No. of Drama Movies'))
+p11
+```
+
+### Budget of Drama Movies By Year
+```{r}
+temp <- filter(data, Genre == "Drama")
+p12 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(Freq = sum(Budget..million...)) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~Freq,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'Budget($)'))
+p12
+```
+
+Horror Films
+=====================================
+
+Row
+-------------------------------------
+### Total Number of Horror Movies
+
+```{r}
+valueBox(sum(data$Genre == 'Horror'),color='red',icon = 'fa-video')
+```
+
+### Total Budget of Horror Movies
+
+```{r}
+valueBox(sum(data[which(data$Genre == 'Horror'), "Budget..million..."]),
+         icon = "fa-dollar",color = "green")
+```
+
+### Average Budget of Horror Movies
+
+```{r}
+valueBox(round(mean(data[which(data$Genre == 'Horror'), "Budget..million..."]),digits = 3),
+         icon = "fa-dollar",color = "green")
+```
+
+Row
+-------------------------------------
+
+### Average Rotten Tomato Ratings
+
+```{r}
+temp <- filter(data, Genre == "Horror")
+gauge(round(mean(temp$Rotten.Tomatoes.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+### Average Audience Ratings
+
+```{r}
+temp <- filter(data, Genre == "Horror")
+gauge(round(mean(temp$Audience.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+Row
+-------------------------------------
+
+### Number of Horror Movies By Year
+```{r}
+temp <- filter(data, Genre == "Horror")
+p13 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~count,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'No. of Horror Movies'))
+p13
+```
+
+### Budget of Horror Movies By Year
+```{r}
+temp <- filter(data, Genre == "Horror")
+p14 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(Freq = sum(Budget..million...)) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~Freq,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'Budget($)'))
+p14
+```
+
+Romance Films
+=====================================
+
+Row
+-------------------------------------
+### Total Number of Romance Movies
+
+```{r}
+valueBox(sum(data$Genre == 'Romance'),color='red',icon = 'fa-video')
+```
+
+### Total Budget of Romance Movies
+
+```{r}
+valueBox(sum(data[which(data$Genre == 'Romance'), "Budget..million..."]),
+         icon = "fa-dollar",color = "green")
+```
+
+### Average Budget of Romance Movies
+
+```{r}
+valueBox(round(mean(data[which(data$Genre == 'Romance'), "Budget..million..."]),digits = 3),
+         icon = "fa-dollar",color = "green")
+```
+
+Row
+-------------------------------------
+
+### Average Rotten Tomato Ratings
+
+```{r}
+temp <- filter(data, Genre == "Romance")
+gauge(round(mean(temp$Rotten.Tomatoes.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+### Average Audience Ratings
+
+```{r}
+temp <- filter(data, Genre == "Romance")
+gauge(round(mean(temp$Audience.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+Row
+-------------------------------------
+
+### Number of Romance Movies By Year
+```{r}
+temp <- filter(data, Genre == "Romance")
+p15 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~count,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'No. of Romance Movies'))
+p15
+```
+
+### Budget of Romance Movies By Year
+```{r}
+temp <- filter(data, Genre == "Romance")
+p16 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(Freq = sum(Budget..million...)) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~Freq,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'Budget($)'))
+p16
+```
+
+Thriller Films
+=====================================
+
+Row
+-------------------------------------
+### Total Number of Thriller Movies
+
+```{r}
+valueBox(sum(data$Genre == 'Thriller'),color='red',icon = 'fa-video')
+```
+
+### Total Budget of Thriller Movies
+
+```{r}
+valueBox(sum(data[which(data$Genre == 'Thriller'), "Budget..million..."]),
+         icon = "fa-dollar",color = "green")
+```
+
+### Average Budget of Thriller Movies
+
+```{r}
+valueBox(round(mean(data[which(data$Genre == 'Thriller'), "Budget..million..."]),digits = 3),
+         icon = "fa-dollar",color = "green")
+```
+
+Row
+-------------------------------------
+
+### Average Rotten Tomato Ratings
+
+```{r}
+temp <- filter(data, Genre == "Thriller")
+gauge(round(mean(temp$Rotten.Tomatoes.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+### Average Audience Ratings
+
+```{r}
+temp <- filter(data, Genre == "Thriller")
+gauge(round(mean(temp$Audience.Ratings..),
+            digits = 2),
+            min = 0,
+            max = 350,
+            gaugeSectors(success = c(0, 150),
+                         warning = c(150, 240),
+                         danger = c(240, 350),
+                         colors = c("green", "yellow", "red")))
+```
+
+Row
+-------------------------------------
+
+### Number of Thriller Movies By Year
+```{r}
+temp <- filter(data, Genre == "Thriller")
+p17 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(count = n()) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~count,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'No. of Thriller Movies'))
+p17
+```
+
+### Budget of Thriller Movies By Year
+```{r}
+temp <- filter(data, Genre == "Thriller")
+p18 <- temp %>%
+         group_by(Year.of.release) %>%
+         summarise(Freq = sum(Budget..million...)) %>%
+         plot_ly(x = ~Year.of.release,
+                 y = ~Freq,
+                 color = ~Year.of.release,
+                 type = 'bar') %>%
+layout(xaxis = list(title = "Years"),
+yaxis = list(title = 'Budget($)'))
+p18
+```
+
+Summary {data-orientation=columns}
+======================================
+  
+  Column
+--------------------------------------
+  
+### Max Audience Rating
+  
+```{r}
+valueBox(max(data$Audience.Ratings..),
+         icon = "fa-star",color='purple')
+```
+
+### Max Rotten Tomatoes Rating
+  
+```{r}
+valueBox(max(data$Rotten.Tomatoes.Ratings..),
+         icon = "fa-star",color = 'red')
+```
+
+### Max Budget in Million $
+  
+```{r}
+valueBox(max(data$Budget..million...),
+         icon = "fa-dollar",color='green')
+```
+
+### Average Audience Rating
+
+```{r}
+valueBox(round(mean(data$Audience.Ratings..),
+               digits = 2),
+         icon = "fa-user",color='red')
+```
+
+### Average Rotten Tomatoes Rating
+
+```{r}
+valueBox(round(mean(data$Rotten.Tomatoes.Ratings..),
+               digits = 2),
+         icon = "fa-user",color='orange')
+```
+
+### Average Budget in Million $
+
+```{r}
+valueBox(round(mean(data$Budget..million...),
+               digits = 2),
+         icon = "fa-dollar",color = 'green')
+```
+
+Column
+--------------------------------------------------------------------------------
+  
+  Report
+
+* This is a report on `r length(data$Film)` Movie Ratings.
+
+* The average Audience Rating was `r mean(data$Audience.Ratings..)`.
+
+* The average Rotten Tomatoes Rating was `r mean(data$Rotten.Tomatoes.Ratings..)`.
+
+* The average Budget was `r mean(data$Budget..million...)`.
+
+This report was generated on `r format(Sys.Date(), format = "%B %d %Y")`.
+
+
